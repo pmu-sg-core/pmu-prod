@@ -136,7 +136,7 @@ async function executeIntent(
 
       const lowConf = flags?.some(f => f.includes('low_confidence'));
       const reply = entry
-        ? `Site diary for ${reportDate} saved (ref: ${siteProjectId}).${lowConf ? ' ⚠️ Some fields had low confidence — please review before signing off.' : ''}`
+        ? `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''}`
         : `I extracted the diary but couldn't save it. Please try again.`;
 
       return {
