@@ -81,6 +81,48 @@ export interface DiaryExtractionResult {
 
 // ── Extraction function ───────────────────────────────────────────────────────
 
+// ── Language config ───────────────────────────────────────────────────────────
+
+const LANGUAGE_HINTS: Record<string, { label: string; examples: string[] }> = {
+  en: {
+    label: 'English / Singlish',
+    examples: ['8 RC workers lah', 'pour concrete already', 'formwork done'],
+  },
+  zh: {
+    label: 'Mandarin / Simplified Chinese',
+    examples: ['今天有8个钢筋工人', '浇筑混凝土', '模板工程', '钢筋绑扎'],
+  },
+  ta: {
+    label: 'Tamil',
+    examples: ['இன்று 8 RC தொழிலாளர்கள்', 'கான்கிரீட் ஊற்றினோம்', 'அச்சு வேலை'],
+  },
+  ms: {
+    label: 'Malay / Bahasa',
+    examples: ['8 pekerja besi beton', 'tuang konkrit', 'acuan siap'],
+  },
+  hi: {
+    label: 'Hindi',
+    examples: ['आज 8 RC मजदूर थे', 'कंक्रीट डाला', 'फॉर्मवर्क हो गया'],
+  },
+  bn: {
+    label: 'Bengali',
+    examples: ['আজ ৮ জন RC শ্রমিক', 'কংক্রিট ঢালাই', 'ফর্মওয়ার্ক'],
+  },
+};
+
+function buildMultilingualSection(languages: string[]): string {
+  if (languages.length === 0) return '';
+  const active = languages
+    .filter(l => LANGUAGE_HINTS[l])
+    .map(l => {
+      const h = LANGUAGE_HINTS[l];
+      return `- ${h.label} (e.g. "${h.examples.join('", "')}")`;
+    })
+    .join('\n');
+  if (!active) return '';
+  return `\nMULTILINGUAL INPUT — accept messages in any of these languages:\n${active}\nALWAYS output JSON fields in English. Map trade terms by meaning across languages — e.g. 钢筋 / besi beton / RC = rebar = Reinforced Concrete Work = C1.5.\n`;
+}
+
 export async function extractDiaryFromTranscript(params: {
   transcript: string;
   projectId: string;
@@ -89,6 +131,7 @@ export async function extractDiaryFromTranscript(params: {
   long?: number | null;
   geolocationVerified?: boolean;
   platform?: string;         // 'WhatsApp Voice Note' | 'WhatsApp Text' | 'Microsoft Teams'
+  languages?: string[];      // e.g. ['en','zh','ta'] — active languages for this subscriber
   model?: string;
 }): Promise<DiaryExtractionResult> {
   const {
@@ -99,6 +142,7 @@ export async function extractDiaryFromTranscript(params: {
     long = null,
     geolocationVerified = false,
     platform = 'WhatsApp Voice Note',
+    languages = ['en'],
     model = 'claude-sonnet-4-6',
   } = params;
 
@@ -107,7 +151,7 @@ export async function extractDiaryFromTranscript(params: {
   const systemPrompt = `You are a BCA-certified Site Diary AI for Singapore construction sites.
 Your job is to extract structured data from raw voice notes or text messages sent by site workers and PMs.
 You must map informal speech to the official BCA Regulation 22 schema.
-
+${buildMultilingualSection(languages)}
 EXTRACTION TARGETS — scan the transcript for all three:
 1. MANPOWER: Any mention of workers, trades, arrival/departure times, headcount.
    Map trade descriptions to BCA EPSS trade codes using this reference:

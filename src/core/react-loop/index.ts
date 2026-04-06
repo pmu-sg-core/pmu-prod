@@ -33,7 +33,7 @@ export interface AgentLoopResult {
 
 async function executeIntent(
   intent: PendingIntent,
-  params: { lastPmIssueKey: string | null; sourceMessageId?: string; actorId?: string; canAssignTickets: boolean },
+  params: { lastPmIssueKey: string | null; sourceMessageId?: string; actorId?: string; canAssignTickets: boolean; languages?: string[] },
 ): Promise<{ reply: string; pmIssueKey?: string; updatedIntent: PendingIntent }> {
 
   if (intent.type === 'pm.task_create') {
@@ -120,6 +120,7 @@ async function executeIntent(
         long: null,
         geolocationVerified: false,
         platform,
+        languages: params.languages ?? ['en'],
       });
 
       const { diaryEntryId } = await saveDiary({
@@ -278,6 +279,7 @@ export async function runAgentLoop(params: {
   canAssignTickets: boolean;
   canAccessBca: boolean;
   siteProjectId: string | null;
+  languages?: string[];
   platform: 'WhatsApp' | 'Microsoft Teams';
   sourceMessageId?: string;
   actorId?: string;
@@ -286,10 +288,10 @@ export async function runAgentLoop(params: {
     userMessage, history, pendingIntents, activeIntentIdx,
     gatheringTask, taskFields, lastPmIssueKey,
     provider, model, maxTokens, temperature, systemPrompt, localeHints,
-    canAssignTickets, canAccessBca, siteProjectId, platform, sourceMessageId, actorId,
+    canAssignTickets, canAccessBca, siteProjectId, languages, platform, sourceMessageId, actorId,
   } = params;
 
-  const execParams = { lastPmIssueKey, sourceMessageId, actorId, canAssignTickets };
+  const execParams = { lastPmIssueKey, sourceMessageId, actorId, canAssignTickets, languages };
   const nextField = getNextField(taskFields, canAssignTickets);
 
   // ── Case 1: Active gathering intent ────────────────────────────────────────

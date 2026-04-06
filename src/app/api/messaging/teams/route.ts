@@ -93,6 +93,7 @@ Always respond in plain text only — no markdown, no bullet points, no asterisk
       canAssignTickets,
       canAccessBca: config?.can_access_bca ?? false,
       siteProjectId: config?.site_project_id ?? null,
+      languages: config?.languages ?? ['en'],
       platform: 'Microsoft Teams',
       sourceMessageId: activityId,
       actorId: teamsUserId,

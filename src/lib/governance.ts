@@ -27,6 +27,7 @@ export interface AgentGovernance extends ConfigSettings {
   can_access_bca: boolean;
   site_project_id: string | null;   // active site project for BCA subscribers
   locale_hints: string | null;
+  languages: string[];              // active input languages e.g. ['en','zh','ta']
 }
 
 export async function getAgentGovernance(
@@ -92,11 +93,16 @@ export async function getAgentGovernance(
     .single();
   siteProjectId = projects?.id ?? null;
 
+  const canAccessBca = sectorTags.includes('bca');
+
   return {
     ...config,
     plan_type: row.plan_type,
     can_assign_tickets: false,
-    can_access_bca: sectorTags.includes('bca'),
+    can_access_bca: canAccessBca,
     site_project_id: siteProjectId,
+    // BCA construction sites default to the four common SG worker languages.
+    // Override per-subscriber by adding a languages[] column to subscriber in future.
+    languages: canAccessBca ? ['en', 'zh', 'ta', 'ms'] : ['en'],
   };
 }
