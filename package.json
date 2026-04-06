@@ -12,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.82.0",
     "@react-pdf/renderer": "^4.3.3",
     "@supabase/supabase-js": "^2.101.1",
+    "docx": "^9.6.1",
     "dotenv": "^17.4.0",
     "lucide-react": "^1.7.0",
     "next": "^16.2.1",

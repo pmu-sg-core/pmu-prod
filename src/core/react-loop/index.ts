@@ -132,8 +132,10 @@ async function executeIntent(
       });
 
       const lowConf = flags?.some(f => f.includes('low_confidence'));
-      const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://pmu.sg'}/api/bca/pdf?diary_id=${diaryEntryId}`;
-      const reply = `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''} Download PDF: ${pdfUrl}`;
+      const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pmu.sg';
+      const pdfUrl  = `${base}/api/bca/pdf?diary_id=${diaryEntryId}`;
+      const docxUrl = `${base}/api/bca/docx?diary_id=${diaryEntryId}`;
+      const reply = `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''}\nPDF: ${pdfUrl}\nWord: ${docxUrl}`;
 
       return {
         reply,
@@ -165,10 +167,12 @@ async function executeIntent(
       };
     }
 
-    const pdfUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://pmu.sg'}/api/bca/pdf?diary_id=${entry.id}`;
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pmu.sg';
+    const pdfUrl  = `${base}/api/bca/pdf?diary_id=${entry.id}`;
+    const docxUrl = `${base}/api/bca/docx?diary_id=${entry.id}`;
     return {
-      reply: `Site diary for ${reportDate} (confidence: ${Math.round((entry.confidence_score ?? 0) * 100)}%). Download PDF: ${pdfUrl}`,
-      updatedIntent: { ...intent, status: 'complete', result: { data: { diaryEntryId: entry.id, pdfUrl } }, completedAt: new Date().toISOString() },
+      reply: `Site diary for ${reportDate} (confidence: ${Math.round((entry.confidence_score ?? 0) * 100)}%).\nPDF: ${pdfUrl}\nWord: ${docxUrl}`,
+      updatedIntent: { ...intent, status: 'complete', result: { data: { diaryEntryId: entry.id, pdfUrl, docxUrl } }, completedAt: new Date().toISOString() },
     };
   }
 
