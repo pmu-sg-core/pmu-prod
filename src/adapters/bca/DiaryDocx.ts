@@ -3,9 +3,8 @@
 
 import {
   Document, Packer, Paragraph, Table, TableRow, TableCell,
-  TextRun, HeadingLevel, AlignmentType, WidthType, BorderStyle,
+  TextRun, AlignmentType, WidthType, BorderStyle,
   ShadingType, convertInchesToTwip, Header, Footer, PageNumber,
-  NumberFormat,
 } from 'docx';
 import type { BcaDiaryJSON } from './extract-diary';
 
@@ -64,10 +63,6 @@ function tableCell(text: string, shaded = false): TableCell {
     shading: shaded ? { type: ShadingType.SOLID, color: ZINC100, fill: ZINC100 } : undefined,
     margins: { top: 40, bottom: 40, left: 100, right: 100 },
   });
-}
-
-function noBorder() {
-  return { style: BorderStyle.NONE, size: 0, color: 'auto' };
 }
 
 // ── Document builder ──────────────────────────────────────────────────────────
@@ -284,7 +279,7 @@ export async function buildDiaryDocx(diary: BcaDiaryJSON, projectName?: string):
           children: [new Paragraph({
             children: [
               new TextRun({ text: `Generated ${new Date().toLocaleDateString('en-SG')} · Confidential · Page `, size: 14, color: '52525b', font: 'Calibri' }),
-              new PageNumber({ format: NumberFormat.DECIMAL } as any),
+              new TextRun({ children: [PageNumber.CURRENT], size: 14, color: '52525b', font: 'Calibri' }),
             ],
             alignment: AlignmentType.CENTER,
           })],
