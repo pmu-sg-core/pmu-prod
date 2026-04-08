@@ -63,7 +63,7 @@ export async function callLLM({
   canAssignTickets?: boolean;
   localeHints?: string | null;
 }): Promise<LLMResult> {
-  const recentHistory = conversationHistory.slice(-HISTORY_WINDOW);
+  const recentHistory = conversationHistory.filter(t => t.content?.trim()).slice(-HISTORY_WINDOW);
   const lastOutbound = recentHistory.filter(t => t.role === 'assistant').at(-1)?.content ?? null;
 
   const structuredSystem = `${systemPrompt}
@@ -188,7 +188,7 @@ export async function callLLMGathering({
   platform: 'WhatsApp' | 'Microsoft Teams';
   localeHints?: string | null;
 }): Promise<GatheringResult> {
-  const recentHistory = conversationHistory.slice(-HISTORY_WINDOW);
+  const recentHistory = conversationHistory.filter(t => t.content?.trim()).slice(-HISTORY_WINDOW);
   const lastOutbound = recentHistory.filter(t => t.role === 'assistant').at(-1)?.content ?? '(none)';
 
   const hypothetical = { ...taskFields, [nextField]: 'filled' };
@@ -317,7 +317,7 @@ export async function callLLMDecompose({
   canAccessBca?: boolean;
   localeHints?: string | null;
 }): Promise<DecomposeResult> {
-  const recentHistory = conversationHistory.slice(-HISTORY_WINDOW);
+  const recentHistory = conversationHistory.filter(t => t.content?.trim()).slice(-HISTORY_WINDOW);
   const lastOutbound = recentHistory.filter(t => t.role === 'assistant').at(-1)?.content ?? null;
 
   const decomposeSystem = `${systemPrompt}
