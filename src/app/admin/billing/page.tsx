@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { logoutAdmin } from '../login/actions';
-import { BillingDashboard } from './BillingDashboard';
+import { BillingDashboard, type LeadEntry } from './BillingDashboard';
 
 // Plan monthly caps (mirrors plan_entitlements max_workitems_per_month)
 const PLAN_TASK_CAPS: Record<string, number> = {
@@ -39,6 +39,15 @@ export default async function AdminBillingPage() {
     .eq('user_id', user.id)
     .single();
   if (roleData?.role !== 'admin') redirect('/admin/login');
+
+  // Fetch outreach leads (waitlist entries from direct outreach sources)
+  const { data: leadsRows } = await supabase
+    .from('waitlist')
+    .select('id, email, first_name, last_name, company, source, bca_grade, outreach_status, created_at')
+    .in('source', ['bca_outreach', 'linkedin'])
+    .order('created_at', { ascending: false });
+
+  const leads: LeadEntry[] = (leadsRows ?? []) as LeadEntry[];
 
   // Fetch subscriptions with all billing fields
   const { data: rows } = await supabase
@@ -116,7 +125,7 @@ export default async function AdminBillingPage() {
           </form>
         </header>
 
-        <BillingDashboard subscribers={subscribers} />
+        <BillingDashboard subscribers={subscribers} leads={leads} />
 
       </div>
     </div>

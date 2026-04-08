@@ -72,15 +72,17 @@ export async function getAgentGovernance(
 
   if (!config) return null;
 
-  // ── Query 2: subscriber sector_tags (BCA gate) ────────────────────────────
+  // ── Query 2: subscriber sector_tags + language override ──────────────────
   let sectorTags: string[] = [];
+  let subscriberLanguages: string[] | null = null;
   if (row.subscriber_id) {
     const { data: sub } = await supabase
       .from('subscriber')
-      .select('sector_tags')
+      .select('sector_tags, languages')
       .eq('id', row.subscriber_id)
       .single();
     sectorTags = sub?.sector_tags ?? [];
+    subscriberLanguages = sub?.languages ?? null;
   }
 
   // ── Query 3: first site project for this subscription ─────────────────────
@@ -101,8 +103,7 @@ export async function getAgentGovernance(
     can_assign_tickets: false,
     can_access_bca: canAccessBca,
     site_project_id: siteProjectId,
-    // BCA construction sites default to the four common SG worker languages.
-    // Override per-subscriber by adding a languages[] column to subscriber in future.
-    languages: canAccessBca ? ['en', 'zh', 'ta', 'ms'] : ['en'],
+    // Per-subscriber override takes priority; BCA subscribers default to the four common SG languages.
+    languages: subscriberLanguages ?? (canAccessBca ? ['en', 'zh', 'ta', 'ms'] : ['en']),
   };
 }

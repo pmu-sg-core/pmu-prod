@@ -14,8 +14,17 @@ export interface SaveDiaryParams {
   intakeLogId?: string | null;
 }
 
+export interface RequeryRecord {
+  id: string;
+  trade_code: string;
+  trade_description: string;
+  worker_count: number;
+  requery_template: string;
+}
+
 export interface SaveDiaryResult {
   diaryEntryId: string;
+  requeryRecords: RequeryRecord[];
 }
 
 export async function saveDiary(params: SaveDiaryParams): Promise<SaveDiaryResult> {
@@ -122,6 +131,7 @@ export async function saveDiary(params: SaveDiaryParams): Promise<SaveDiaryResul
 
   // ── ePSS productivity records (trade-level aggregation) ───────────────────────
 
+  let requeryRecords: RequeryRecord[] = [];
   await supabase.from('epss_productivity_records').delete().eq('diary_entry_id', diaryEntryId);
   if (diary.manpower_epss_compliance.length > 0) {
     const { data: supervisor } = await supabase
@@ -172,8 +182,20 @@ export async function saveDiary(params: SaveDiaryParams): Promise<SaveDiaryResul
       requery_template:       `How many of the ${g.worker_count} ${g.trade_description} workers today are local (Singapore citizens/PRs)?`,
     }));
 
-    await supabase.from('epss_productivity_records').insert(epssRecords);
+    const { data: inserted, error: epssError } = await supabase
+      .from('epss_productivity_records')
+      .insert(epssRecords)
+      .select('id, trade_code, trade_description, worker_count, requery_template');
+    if (epssError) throw new Error(`Failed to insert epss_productivity_records: ${epssError.message}`);
+
+    requeryRecords = (inserted ?? []).map(r => ({
+      id:                r.id as string,
+      trade_code:        r.trade_code as string,
+      trade_description: r.trade_description as string,
+      worker_count:      r.worker_count as number,
+      requery_template:  r.requery_template as string,
+    }));
   }
 
-  return { diaryEntryId };
+  return { diaryEntryId, requeryRecords };
 }

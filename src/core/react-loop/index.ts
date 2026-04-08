@@ -5,7 +5,7 @@ import { callLLMGathering, callLLMDecompose, type DecomposedIntent } from './orc
 import { getNextField, type TaskFieldsState, type TaskFields } from '@/adapters/pmtool/types';
 import { routeWorkItem, getWorkItemByKey, reassignWorkItem } from '@/adapters/router';
 import { extractDiaryFromTranscript } from '@/adapters/bca/extract-diary';
-import { saveDiary } from '@/adapters/bca/save-diary';
+import { saveDiary, type RequeryRecord } from '@/adapters/bca/save-diary';
 import { supabase } from '@/lib/supabase';
 import {
   type PendingIntent,
@@ -27,6 +27,8 @@ export interface AgentLoopResult {
   updatedTaskFields: TaskFieldsState;
   stillGathering: boolean;
   shouldRotate: boolean; // true = off_topic; caller must rotateConversationState
+  pendingRequeryRecords?: RequeryRecord[]; // set when a BCA diary save triggered a requery
+  pendingRequeryDiaryId?: string;
 }
 
 // ── Intent execution (non-gathering intents) ──────────────────────────────────
@@ -34,7 +36,7 @@ export interface AgentLoopResult {
 async function executeIntent(
   intent: PendingIntent,
   params: { lastPmIssueKey: string | null; sourceMessageId?: string; actorId?: string; canAssignTickets: boolean; languages?: string[] },
-): Promise<{ reply: string; pmIssueKey?: string; updatedIntent: PendingIntent }> {
+): Promise<{ reply: string; pmIssueKey?: string; updatedIntent: PendingIntent; requeryRecords?: RequeryRecord[]; requeryDiaryId?: string }> {
 
   if (intent.type === 'pm.task_create') {
     const f = intent.fields as TaskFields;
@@ -123,7 +125,7 @@ async function executeIntent(
         languages: params.languages ?? ['en'],
       });
 
-      const { diaryEntryId } = await saveDiary({
+      const { diaryEntryId, requeryRecords } = await saveDiary({
         siteProjectId: resolvedProjectId,
         reportDate,
         diary,
@@ -135,11 +137,18 @@ async function executeIntent(
       const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pmu.sg';
       const pdfUrl  = `${base}/api/bca/pdf?diary_id=${diaryEntryId}`;
       const docxUrl = `${base}/api/bca/docx?diary_id=${diaryEntryId}`;
-      const reply = `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''}\nPDF: ${pdfUrl}\nWord: ${docxUrl}`;
+      let reply = `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''}\nPDF: ${pdfUrl}\nWord: ${docxUrl}`;
+
+      // If local/foreign worker split is unknown, ask the first requery question immediately
+      if (requeryRecords.length > 0) {
+        reply += `\n\n${requeryRecords[0].requery_template}`;
+      }
 
       return {
         reply,
         updatedIntent: { ...intent, status: 'complete', result: { data: { diaryEntryId, pdfUrl } }, completedAt: new Date().toISOString() },
+        requeryRecords: requeryRecords.length > 0 ? requeryRecords : undefined,
+        requeryDiaryId: requeryRecords.length > 0 ? diaryEntryId : undefined,
       };
     } catch {
       return { reply: `Something went wrong extracting the site diary. Please try again.`, updatedIntent: { ...intent, status: 'failed', completedAt: new Date().toISOString() } };
@@ -185,11 +194,13 @@ async function executeIntent(
 async function processReadyIntents(
   intents: PendingIntent[],
   startIdx: number,
-  params: { lastPmIssueKey: string | null; sourceMessageId?: string; actorId?: string; canAssignTickets: boolean },
-): Promise<{ replies: string[]; pmIssueKey?: string; updatedIntents: PendingIntent[]; nextIdx: number }> {
+  params: { lastPmIssueKey: string | null; sourceMessageId?: string; actorId?: string; canAssignTickets: boolean; languages?: string[] },
+): Promise<{ replies: string[]; pmIssueKey?: string; updatedIntents: PendingIntent[]; nextIdx: number; requeryRecords?: RequeryRecord[]; requeryDiaryId?: string }> {
   const updated = [...intents];
   const replies: string[] = [];
   let pmIssueKey: string | undefined;
+  let requeryRecords: RequeryRecord[] | undefined;
+  let requeryDiaryId: string | undefined;
   let idx = startIdx;
 
   while (idx < updated.length) {
@@ -200,10 +211,11 @@ async function processReadyIntents(
     updated[idx] = result.updatedIntent;
     if (result.reply) replies.push(result.reply);
     if (result.pmIssueKey) pmIssueKey = result.pmIssueKey;
+    if (result.requeryRecords) { requeryRecords = result.requeryRecords; requeryDiaryId = result.requeryDiaryId; }
     idx++;
   }
 
-  return { replies, pmIssueKey, updatedIntents: updated, nextIdx: idx };
+  return { replies, pmIssueKey, updatedIntents: updated, nextIdx: idx, requeryRecords, requeryDiaryId };
 }
 
 // ── Build intent queue from decomposition result ──────────────────────────────
@@ -387,7 +399,7 @@ export async function runAgentLoop(params: {
   }
 
   // All new intents are immediately executable
-  const { replies, pmIssueKey, updatedIntents, nextIdx } =
+  const { replies, pmIssueKey, updatedIntents, nextIdx, requeryRecords, requeryDiaryId } =
     await processReadyIntents(allIntents, startIdx, execParams);
 
   const llmReply = decomposeResult.reply;
@@ -405,6 +417,8 @@ export async function runAgentLoop(params: {
     reply: finalReply, classification: primaryType, confidence: decomposeResult.confidence,
     pmIssueKey,
     updatedPendingIntents: updatedIntents, updatedActiveIntentIdx: nextIdx,
+    pendingRequeryRecords: requeryRecords,
+    pendingRequeryDiaryId: requeryDiaryId,
     updatedTaskFields: {}, stillGathering: false, shouldRotate: false,
   };
 }

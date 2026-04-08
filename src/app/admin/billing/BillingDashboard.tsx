@@ -2,6 +2,18 @@
 
 import { useState } from 'react';
 
+export interface LeadEntry {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  source: string;
+  bca_grade: string | null;
+  outreach_status: string;
+  created_at: string;
+}
+
 export interface SubscriberBilling {
   id: string;
   email: string;
@@ -262,9 +274,76 @@ function GenerateLinkPanel({ subscribers }: { subscribers: SubscriberBilling[] }
   );
 }
 
+// ── Leads Table ────────────────────────────────────────────────────────────────
+
+const STATUS_COLORS: Record<string, string> = {
+  new:          'text-zinc-400 bg-zinc-800',
+  contacted:    'text-blue-400 bg-blue-500/10',
+  replied:      'text-yellow-400 bg-yellow-500/10',
+  demo_booked:  'text-purple-400 bg-purple-500/10',
+  converted:    'text-[#00d4a1] bg-[#00d4a1]/10',
+  disqualified: 'text-red-400 bg-red-500/10',
+};
+
+function LeadsTable({ leads }: { leads: LeadEntry[] }) {
+  return (
+    <div className="bg-[#1a1a1a] border border-zinc-800 rounded-2xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-zinc-800">
+        <h2 className="text-sm font-semibold text-white uppercase tracking-wider">Outreach Leads</h2>
+        <p className="text-xs text-zinc-500 mt-0.5">BCA contractor targets from direct outreach</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-zinc-800">
+              <th className="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Company / Contact</th>
+              <th className="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">BCA Grade</th>
+              <th className="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Source</th>
+              <th className="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Status</th>
+              <th className="text-left px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Added</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map(lead => (
+              <tr key={lead.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="text-white font-medium">{lead.company ?? '—'}</div>
+                  <div className="text-zinc-500 text-xs">{[lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.email}</div>
+                  <div className="text-zinc-600 text-xs">{lead.email}</div>
+                </td>
+                <td className="px-6 py-4">
+                  {lead.bca_grade
+                    ? <span className="text-xs font-mono font-semibold text-[#00d4a1]">{lead.bca_grade}</span>
+                    : <span className="text-zinc-600 text-xs">—</span>
+                  }
+                </td>
+                <td className="px-6 py-4 text-xs text-zinc-400">{lead.source}</td>
+                <td className="px-6 py-4">
+                  <span className={`text-xs px-2 py-1 rounded font-medium ${STATUS_COLORS[lead.outreach_status] ?? 'text-zinc-400 bg-zinc-800'}`}>
+                    {lead.outreach_status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-xs text-zinc-500">
+                  {new Date(lead.created_at).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </td>
+              </tr>
+            ))}
+            {leads.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-8 text-center text-zinc-600 text-sm">No outreach leads yet.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Root component ─────────────────────────────────────────────────────────────
 
-export function BillingDashboard({ subscribers }: { subscribers: SubscriberBilling[] }) {
+export function BillingDashboard({ subscribers, leads }: { subscribers: SubscriberBilling[]; leads: LeadEntry[] }) {
+  const [tab, setTab] = useState<'subscriptions' | 'leads'>('subscriptions');
   const [portalLoading, setPortalLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -303,12 +382,30 @@ export function BillingDashboard({ subscribers }: { subscribers: SubscriberBilli
   const activeSubscribers = subscribers.filter(s => s.status_label === 'Active' || s.status_label === 'Trialing');
   const allSubscribers = subscribers;
 
+  const tabClass = (t: typeof tab) =>
+    `text-sm px-4 py-2 rounded-lg transition-colors ${tab === t ? 'text-white bg-zinc-800 border border-zinc-700' : 'text-zinc-500 hover:text-white'}`;
+
   return (
     <div className="space-y-8">
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">{error}</div>
       )}
 
+      {/* Tab switcher */}
+      <div className="flex items-center gap-2">
+        <button className={tabClass('subscriptions')} onClick={() => setTab('subscriptions')}>
+          Subscriptions
+          <span className="ml-2 text-xs text-zinc-500">({allSubscribers.length})</span>
+        </button>
+        <button className={tabClass('leads')} onClick={() => setTab('leads')}>
+          Leads
+          <span className="ml-2 text-xs text-zinc-500">({leads.length})</span>
+        </button>
+      </div>
+
+      {tab === 'leads' && <LeadsTable leads={leads} />}
+
+      {tab === 'subscriptions' && <>
       {/* Active subscriber cards */}
       {activeSubscribers.length > 0 && (
         <div>
@@ -383,6 +480,7 @@ export function BillingDashboard({ subscribers }: { subscribers: SubscriberBilli
           </table>
         </div>
       </div>
+      </>}
     </div>
   );
 }

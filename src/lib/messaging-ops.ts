@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { TaskFieldsState } from '@/adapters/pmtool/types';
+import type { RequeryRecord } from '@/adapters/bca/save-diary';
 import {
   type PendingIntent,
   deriveGatheringState,
@@ -79,12 +80,18 @@ export interface ConversationTurn {
 
 // ── Conversation state ────────────────────────────────────────────────────────
 
+export interface PendingRequery {
+  diaryEntryId: string;
+  records: RequeryRecord[];
+}
+
 /** Full conversation state including the intent queue. */
 export interface ConversationState {
   history: ConversationTurn[];
   pendingIntents: PendingIntent[];
   activeIntentIdx: number;
   lastPmIssueKey: string | null;
+  pendingRequery: PendingRequery | null;
   // Legacy shim — derived from queue; keeps existing route handlers unchanged
   gatheringTask: boolean;
   taskFields: TaskFieldsState;
@@ -97,7 +104,7 @@ export async function getConversationState(
 ): Promise<ConversationState> {
   const { data } = await supabase
     .from('active_conversations')
-    .select('conversation_history, pending_intents, active_intent_idx, last_pm_issue_key')
+    .select('conversation_history, pending_intents, active_intent_idx, last_pm_issue_key, pending_requery')
     .eq('sender_id', senderId)
     .eq('channel', channel)
     .eq('is_active', true)
@@ -111,6 +118,7 @@ export async function getConversationState(
     pendingIntents,
     activeIntentIdx,
     lastPmIssueKey: (data?.last_pm_issue_key as string | null) ?? null,
+    pendingRequery: (data?.pending_requery as PendingRequery | null) ?? null,
     ...deriveGatheringState(pendingIntents, activeIntentIdx),
   };
 }
@@ -124,6 +132,7 @@ export async function updateConversationState(
   pendingIntents: PendingIntent[],
   activeIntentIdx: number,
   pmIssueKey?: string,
+  pendingRequery?: PendingRequery | null,
 ): Promise<void> {
   const MAX_HISTORY = 20;
   const payload = {
@@ -132,6 +141,8 @@ export async function updateConversationState(
     active_intent_idx: activeIntentIdx,
     last_interaction_at: new Date().toISOString(),
     ...(pmIssueKey ? { last_pm_issue_key: pmIssueKey } : {}),
+    // Explicitly pass null to clear requery when resolved; undefined = don't touch
+    ...(pendingRequery !== undefined ? { pending_requery: pendingRequery } : {}),
   };
 
   const { count } = await supabase
