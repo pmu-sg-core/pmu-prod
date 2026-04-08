@@ -60,7 +60,8 @@ export default async function AdminBillingPage() {
       external_customer_id,
       external_subscription_id,
       system_status ( label ),
-      waitlist ( email, first_name, last_name )
+      waitlist ( email, first_name, last_name ),
+      subscriber:subscriber_id ( display_name, email )
     `)
     .order('created_at', { ascending: false });
 
@@ -82,8 +83,8 @@ export default async function AdminBillingPage() {
 
     return {
       id: r.id as string,
-      email: r.waitlist?.email ?? '',
-      name: [r.waitlist?.first_name, r.waitlist?.last_name].filter(Boolean).join(' ') || r.waitlist?.email || '—',
+      email: r.waitlist?.email ?? (r.subscriber as any)?.email ?? '',
+      name: [r.waitlist?.first_name, r.waitlist?.last_name].filter(Boolean).join(' ') || r.waitlist?.email || (r.subscriber as any)?.display_name || (r.subscriber as any)?.email || '—',
       plan_type: plan,
       status_label: (r.system_status as any)?.label ?? null,
       external_subscription_id: r.external_subscription_id as string | null,
