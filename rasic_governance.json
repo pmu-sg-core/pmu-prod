@@ -1,0 +1,13 @@
+{
+  "governance_matrix": {
+    "trade_progress": { "A": "@Miyu", "R": "@Miyu", "S": ["@IU", "@Ryu"], "I": ["@Waku", "@Lulu"] },
+    "safety_incident": { "A": "@Waku", "R": "@Waku", "S": ["@IU"], "C": ["@Lulu"], "I": ["@Miyu"] },
+    "material_delivery": { "A": "@Ryu", "R": "@Ryu", "S": ["@Lulu", "@IU"], "C": ["@Miyu"] },
+    "gate_logistics": { "A": "@Lulu", "R": "@Lulu", "S": ["@IU"], "C": ["@Ryu"] },
+    "quality_verification": { "A": "@IU", "R": "@IU", "S": ["@Waku"], "C": ["@Miyu"] }
+  },
+  "escalation_thresholds": {
+    "tier_3_keywords": ["collapse", "injury", "fire", "fatality", "stop work"],
+    "emergency_contacts": ["+65XXXX1234", "+65XXXX5678"]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "watcher": { "tag": "@Manu", "role": "Safety", "priority": 1 },
+  "accountant": { "tag": "@Miyu", "role": "Finance", "priority": 2 },
+  "gatekeeper": { "tag": "@IU", "role": "Logistics", "priority": 3 },
+  "resource": { "tag": "@Ryu", "role": "Materials", "priority": 4 },
+  "timekeeper": { "tag": "@Lulu", "role": "Labor", "priority": 5 }
+}

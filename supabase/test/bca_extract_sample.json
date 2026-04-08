@@ -8,3 +8,17 @@
   "geolocation_verified": false,
   "platform": "WhatsApp Voice Note"
 }
+
+
+{
+  "project_id": "STRING (BCA Reference Number)",
+  "submission_date": "YYYY-MM-DD",
+  "manpower_logs": [
+    {
+      "sub_contractor_uen": "STRING (Valid ACRA UEN)",
+      "trade_code": "STRING (BCA Standardized Code)",
+      "headcount": "INTEGER",
+      "location_zone": "STRING (Mapped to BIM/Site Plan)"
+    }
+  ]
+}

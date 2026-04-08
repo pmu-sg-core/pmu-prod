@@ -536,7 +536,7 @@ export default function WaitlistPage() {
           <div className="font-mono font-extrabold text-sm flex items-center gap-2 text-slate-400">
             <div className="w-4 h-4 bg-emerald-500 rounded-sm shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
             pmu<span className="text-emerald-400">.sg</span>
-            <span className="text-slate-700 ml-2">&middot; <a href="https://cloudlabhub.sg" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 transition-colors">Cloudlab Technologies</a></span>
+            <span className="text-slate-700 ml-2">&middot; <a href="https://cloudlabhub.sg" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 transition-colors">Cloudlab Technology Services</a></span>
           </div>
           <div className="flex items-center gap-4 text-xs font-mono text-slate-600">
             <span>Built for SG SMEs and Enterprises</span>

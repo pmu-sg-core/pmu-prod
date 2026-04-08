@@ -1,0 +1,31 @@
+{
+  "proactive_rules": [
+    {"BCA" : [
+      {
+        "bot": "@Lulu",
+        "event": "Daily_Start",
+        "condition": "Time == 08:00",
+        "message": "Good morning Team! Please log your headcounts for Zone A and B now. 👷‍♂️"
+      },
+      {
+        "bot": "@Waku",
+        "event": "Safety_Reminder",
+        "condition": "Last_Safety_Log > 4 hours",
+        "message": "I haven't seen a safety check in 4 hours. @Foreman, please upload a photo of the Level 5 barricades. 🛡️"
+      },
+      {
+        "bot": "@Ryu",
+        "event": "Low_Stock_Alert",
+        "condition": "Concrete_Inventory < 20m3",
+        "message": "Alert: Concrete levels are low for tomorrow's pour. @Miyu, have we approved the PO for the next delivery? 🚛"
+      },
+      {
+        "bot": "@IU",
+        "event": "QA_Verification",
+        "condition": "@Miyu.Progress == 'Casting Done' AND @IU.Photo == NULL",
+        "message": "Miyu says casting is done at Block A. I need a photo to verify the finish quality! 📸"
+      }
+    ]
+  }
+]
+}

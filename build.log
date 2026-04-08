@@ -1,0 +1,50 @@
+
+> pmu-sg-core@0.1.0 build C:\Users\wtaiy\Projects\pmu-sg-core
+> next build
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.2s
+  Running TypeScript ...
+  Finished TypeScript in 4.9s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/22) ...
+  Generating static pages using 15 workers (5/22) 
+  Generating static pages using 15 workers (10/22) 
+  Generating static pages using 15 workers (16/22) 
+✓ Generating static pages using 15 workers (22/22) in 655ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ƒ /admin/billing
+├ ƒ /admin/dashboard
+├ ○ /admin/login
+├ ƒ /admin/settings
+├ ƒ /api/bca/docx
+├ ƒ /api/bca/extract
+├ ƒ /api/bca/pdf
+├ ƒ /api/bca/submit
+├ ƒ /api/billing/checkout
+├ ƒ /api/billing/export
+├ ƒ /api/billing/portal
+├ ƒ /api/messaging
+├ ƒ /api/messaging/teams
+├ ƒ /api/waitlist
+├ ƒ /api/webhooks/mailerlite
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/webhooks/whatsapp
+├ ○ /bca
+├ ○ /billing/success
+└ ○ /waitlist
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

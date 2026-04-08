@@ -1,0 +1,29 @@
+{
+  "project_id": "pmu_sg_001",
+  "currency": "SGD",
+  "rates": {
+    "concreting": {
+      "unit": "m3",
+      "rate_per_unit": 185.00,
+      "bca_code": "C101",
+      "description": "G40 Concrete Pouring"
+    },
+    "reinforcement": {
+      "unit": "ton",
+      "rate_per_unit": 1250.00,
+      "bca_code": "R202",
+      "description": "High Tensile Rebar Fabrication"
+    },
+    "hacking": {
+      "unit": "m2",
+      "rate_per_unit": 45.00,
+      "bca_code": "D303",
+      "description": "Surface Demolition/Hacking"
+    },
+    "labor_ot": {
+      "unit": "hour",
+      "rate_per_unit": 25.00,
+      "description": "General Worker Overtime"
+    }
+  }
+}
