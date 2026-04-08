@@ -125,6 +125,14 @@ async function executeIntent(
         languages: params.languages ?? ['en'],
       });
 
+      // Low-confidence gate — ask foreman to resend rather than saving a bad entry
+      if (confidence < 0.4) {
+        return {
+          reply: `I caught part of that but couldn't extract enough detail (${Math.round(confidence * 100)}% confidence). Could you resend with worker trade and count? E.g. "3 RC workers, 2 SS workers at Block A Level 3."`,
+          updatedIntent: { ...intent, status: 'failed', completedAt: new Date().toISOString() },
+        };
+      }
+
       const { diaryEntryId, requeryRecords } = await saveDiary({
         siteProjectId: resolvedProjectId,
         reportDate,
