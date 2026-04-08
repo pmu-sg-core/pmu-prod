@@ -71,6 +71,13 @@ export interface BcaDiaryJSON {
     confidence_score: number;
     human_in_the_loop_validation: { validated_by: string | null; validation_time: string | null };
   };
+  epss_trade_summary?: Array<{
+    trade_code: string;
+    trade_description: string;
+    worker_count: number;
+    local_worker_count: number;
+    foreign_worker_count: number;
+  }>;
 }
 
 export interface DiaryExtractionResult {

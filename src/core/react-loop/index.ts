@@ -143,18 +143,20 @@ async function executeIntent(
 
       const lowConf = flags?.some(f => f.includes('low_confidence'));
       const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pmu.sg';
-      const pdfUrl  = `${base}/api/bca/pdf?diary_id=${diaryEntryId}`;
-      const docxUrl = `${base}/api/bca/docx?diary_id=${diaryEntryId}`;
-      let reply = `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''}\nPDF: ${pdfUrl}\nWord: ${docxUrl}`;
 
-      // If local/foreign worker split is unknown, ask the first requery question immediately
+      let reply: string;
       if (requeryRecords.length > 0) {
-        reply += `\n\n${requeryRecords[0].requery_template}`;
+        // Defer PDF/DOCX links until all requery questions are answered
+        reply = `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''}\n\n${requeryRecords[0].requery_template}`;
+      } else {
+        const pdfUrl  = `${base}/api/bca/pdf?diary_id=${diaryEntryId}`;
+        const docxUrl = `${base}/api/bca/docx?diary_id=${diaryEntryId}`;
+        reply = `Site diary for ${reportDate} saved.${lowConf ? ' Some fields had low confidence — please review before signing off.' : ''}\nPDF: ${pdfUrl}\nWord: ${docxUrl}`;
       }
 
       return {
         reply,
-        updatedIntent: { ...intent, status: 'complete', result: { data: { diaryEntryId, pdfUrl } }, completedAt: new Date().toISOString() },
+        updatedIntent: { ...intent, status: 'complete', result: { data: { diaryEntryId } }, completedAt: new Date().toISOString() },
         requeryRecords: requeryRecords.length > 0 ? requeryRecords : undefined,
         requeryDiaryId: requeryRecords.length > 0 ? diaryEntryId : undefined,
       };

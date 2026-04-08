@@ -172,6 +172,24 @@ export function DiaryPDF({ diary }: { diary: BcaDiaryJSON }) {
                 <Text style={[s.tableCell, { flex: 0.6 }]}>{fmt(w.attendance.total_man_hours)}</Text>
               </View>
             ))}
+            {diary.epss_trade_summary && diary.epss_trade_summary.length > 0 && (
+              <>
+                <View style={[s.tableHeader, { marginTop: 6 }]}>
+                  <Text style={s.tableHeaderTxt}>Trade</Text>
+                  <Text style={[s.tableHeaderTxt, { flex: 0.6 }]}>Total</Text>
+                  <Text style={[s.tableHeaderTxt, { flex: 0.6 }]}>Local</Text>
+                  <Text style={[s.tableHeaderTxt, { flex: 0.6 }]}>Foreign</Text>
+                </View>
+                {diary.epss_trade_summary.map((t, i) => (
+                  <View key={i} style={[s.tableRow, i % 2 === 0 ? {} : { backgroundColor: '#fafafa' }]}>
+                    <Text style={s.tableCellBold}>{t.trade_description} ({t.trade_code})</Text>
+                    <Text style={[s.tableCell, { flex: 0.6 }]}>{t.worker_count}</Text>
+                    <Text style={[s.tableCell, { flex: 0.6 }]}>{t.local_worker_count}</Text>
+                    <Text style={[s.tableCell, { flex: 0.6 }]}>{t.foreign_worker_count}</Text>
+                  </View>
+                ))}
+              </>
+            )}
           </View>
         )}
 

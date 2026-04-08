@@ -140,6 +140,38 @@ export async function buildDiaryDocx(diary: BcaDiaryJSON, projectName?: string):
     sections.push(new Paragraph({ children: [normal('No manpower records.', 16)], spacing: { after: 160 } }));
   }
 
+  // ── EPSS trade summary (confirmed local/foreign split from requery) ────────────
+  if (manpower_epss_compliance.length > 0 && diary.epss_trade_summary && diary.epss_trade_summary.length > 0) {
+    sections.push(
+      new Paragraph({ children: [bold('Local / Foreign Worker Split (Confirmed)', 16)], spacing: { before: 120, after: 60 } }),
+      new Table({
+        rows: [
+          new TableRow({
+            children: [
+              tableHeaderCell('Trade'),
+              tableHeaderCell('Total'),
+              tableHeaderCell('Local'),
+              tableHeaderCell('Foreign'),
+            ],
+            tableHeader: true,
+          }),
+          ...diary.epss_trade_summary.map((t, i) =>
+            new TableRow({
+              children: [
+                tableCell(`${t.trade_description} (${t.trade_code})`, i % 2 === 1),
+                tableCell(String(t.worker_count), i % 2 === 1),
+                tableCell(String(t.local_worker_count), i % 2 === 1),
+                tableCell(String(t.foreign_worker_count), i % 2 === 1),
+              ],
+            })
+          ),
+        ],
+        width: { size: 100, type: WidthType.PERCENTAGE },
+      }) as unknown as Paragraph,
+      new Paragraph({ text: '', spacing: { after: 160 } }),
+    );
+  }
+
   // ── Site activities ───────────────────────────────────────────────────────────
   sections.push(sectionHeading('Site Activities — Regulation 22'));
 

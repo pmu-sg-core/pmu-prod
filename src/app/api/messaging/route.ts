@@ -244,6 +244,22 @@ async function handleRequeryResponse(
     return { handled: true, reply: `Something went wrong saving the worker count. Please try again: ${current.requery_template}`, nextRequery: pendingRequery };
   }
 
+  // Patch structured_json in site_diary_entries to reflect confirmed local/foreign split
+  const { data: diaryEntry } = await supabase
+    .from('site_diary_entries')
+    .select('structured_json')
+    .eq('id', pendingRequery.diaryEntryId)
+    .single();
+
+  if (diaryEntry?.structured_json) {
+    const json = diaryEntry.structured_json as import('@/adapters/bca/extract-diary').BcaDiaryJSON;
+    const summary = json.epss_trade_summary ?? [];
+    const idx = summary.findIndex(s => s.trade_code === current.trade_code);
+    const confirmed = { trade_code: current.trade_code, trade_description: current.trade_description, worker_count: workerCount, local_worker_count: clampedLocal, foreign_worker_count: foreignCount };
+    if (idx >= 0) summary[idx] = confirmed; else summary.push(confirmed);
+    await supabase.from('site_diary_entries').update({ structured_json: { ...json, epss_trade_summary: summary } }).eq('id', pendingRequery.diaryEntryId);
+  }
+
   if (remaining.length > 0) {
     return {
       handled: true,
@@ -252,9 +268,12 @@ async function handleRequeryResponse(
     };
   }
 
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pmu.sg';
+  const pdfUrl  = `${base}/api/bca/pdf?diary_id=${pendingRequery.diaryEntryId}`;
+  const docxUrl = `${base}/api/bca/docx?diary_id=${pendingRequery.diaryEntryId}`;
   return {
     handled: true,
-    reply: `Got it — ${clampedLocal} local, ${foreignCount} foreign for ${current.trade_description}. All worker counts confirmed. Diary is ready for submission.`,
+    reply: `Got it — ${clampedLocal} local, ${foreignCount} foreign for ${current.trade_description}. All worker counts confirmed.\nPDF: ${pdfUrl}\nWord: ${docxUrl}`,
     nextRequery: null,
   };
 }
